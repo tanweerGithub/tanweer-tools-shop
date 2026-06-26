@@ -1,20 +1,54 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# ToolsShop
 
-# Run and deploy your AI Studio app
+ToolsShop is a modern e-commerce application built with React, Vite, and TypeScript. It provides a seamless shopping experience for users to browse various tools, add them to their cart, and proceed with a secure checkout process.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+- Product Listing: Browse a wide range of tools with detailed descriptions.
+- Shopping Cart: Add, remove, and update items in your shopping cart.
+- User Authentication: Register and log in to manage your orders.
+- Checkout Process: Secure and smooth checkout flow.
+- Order History: View your past orders.
+- Contact Page: Reach out for support or inquiries.
 
-## Run Locally
+## Technologies Used
 
-**Prerequisites:**  Node.js
+- React
+- TypeScript
+- Vite
+- React Router
+- Context API for state management
 
+## Setup and Installation
 
-1. Install dependencies:
+To get this project up and running on your local machine, follow these steps:
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+   `git clone https://github.com/tanweerGithub/tanweer-tools-shop.git`
+2. Navigate to the project directory:
+   `cd tanweer-tools-shop`
+3. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   or
+   `yarn install`
+
+### Running the Development Server
+
+Start the development server with:
+
+`npm run dev`
+   or
+`yarn dev`
+
+The application will be available at `http://localhost:5173` (or another port if 5173 is in use).
+
+## Contributing
+
+Contributions are welcome! Please fork the repository and create a pull request with your changes.
