@@ -1,0 +1,4 @@
+{
+  "name": "Practice Software Testing Shop",
+  "description": "A fully functional e-commerce simulation designed for practicing UI test automation (Selenium, Playwright, Cypress). Features accessible selectors, form validation, and simulated backend logic."
+}
