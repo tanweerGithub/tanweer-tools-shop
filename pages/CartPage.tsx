@@ -8,27 +8,15 @@ import {
 } from '@mui/material';
 
 export const CartPage: React.FC = () => {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useShop();
+  const { cart, removeFromCart, updateQuantity, subtotal, cartTotal, discount, couponCode, applyCoupon } = useShop();
   const navigate = useNavigate();
-  const [coupon, setCoupon] = useState('');
-  const [discount, setDiscount] = useState(0);
+  const [couponInput, setCouponInput] = useState(couponCode);
   const [message, setMessage] = useState('');
 
-  const applyCoupon = () => {
-    setMessage('');
-    if (coupon === 'TEST10') {
-      setDiscount(cartTotal * 0.10);
-      setMessage('Coupon TEST10 applied! 10% off.');
-    } else if (coupon === 'OFF20') {
-      setDiscount(cartTotal * 0.20);
-      setMessage('Coupon OFF20 applied! 20% off.');
-    } else {
-      setDiscount(0);
-      setMessage('Invalid coupon code.');
-    }
+  const handleApplyCoupon = () => {
+    const result = applyCoupon(couponInput);
+    setMessage(result.message);
   };
-
-  const finalTotal = cartTotal - discount;
 
   if (cart.length === 0) {
     return (
@@ -118,18 +106,18 @@ export const CartPage: React.FC = () => {
             <Box sx={{ my: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography color="text.secondary">Subtotal</Typography>
-                <Typography data-test="cart-subtotal">${cartTotal.toFixed(2)}</Typography>
+                <Typography data-test="cart-subtotal">${subtotal.toFixed(2)}</Typography>
               </Box>
               {discount > 0 && (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', color: 'success.main' }}>
-                  <Typography>Discount</Typography>
+                  <Typography>Discount ({couponCode})</Typography>
                   <Typography data-test="cart-discount">-${discount.toFixed(2)}</Typography>
                 </Box>
               )}
               <Divider sx={{ my: 1 }} />
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="h6" fontWeight="bold">Total</Typography>
-                <Typography variant="h6" fontWeight="bold" data-test="cart-total">${finalTotal.toFixed(2)}</Typography>
+                <Typography variant="h6" fontWeight="bold" data-test="cart-total">${cartTotal.toFixed(2)}</Typography>
               </Box>
             </Box>
 
@@ -140,11 +128,11 @@ export const CartPage: React.FC = () => {
                   size="small" 
                   fullWidth 
                   placeholder="Code (e.g. TEST10)"
-                  value={coupon}
-                  onChange={(e) => setCoupon(e.target.value)}
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
                   data-test="coupon-code"
                 />
-                <Button variant="outlined" onClick={applyCoupon} data-test="coupon-apply">Apply</Button>
+                <Button variant="outlined" onClick={handleApplyCoupon} data-test="coupon-apply">Apply</Button>
               </Box>
               {message && (
                 <Typography variant="caption" color={discount > 0 ? 'success.main' : 'error.main'} sx={{ mt: 1, display: 'block' }} data-test="coupon-message">

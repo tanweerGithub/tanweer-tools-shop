@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem, User, Order, PaymentMethod } from '../types';
-import { MOCK_PRODUCTS } from '../constants';
+import { MOCK_PRODUCTS, VALID_COUPONS } from '../constants';
 
 interface ShopContextType {
   products: Product[];
@@ -15,6 +15,10 @@ interface ShopContextType {
   logout: () => void;
   placeOrder: (cart: CartItem[], subtotal: number, total: number, paymentMethod: PaymentMethod) => Order;
   cartTotal: number;
+  subtotal: number;
+  discount: number;
+  couponCode: string;
+  applyCoupon: (code: string) => { success: boolean; message: string };
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -24,21 +28,35 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cart, setCart] = useState<CartItem[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [couponCode, setCouponCode] = useState<string>('');
+  const [discount, setDiscount] = useState<number>(0);
 
   // Load cart, user, and orders from local storage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedCart = localStorage.getItem('cart');
     const storedOrders = localStorage.getItem('orders');
+    const storedCouponCode = localStorage.getItem('couponCode');
+    const storedDiscount = localStorage.getItem('discount');
     if (storedUser) setUser(JSON.parse(storedUser));
     if (storedCart) setCart(JSON.parse(storedCart));
     if (storedOrders) setOrders(JSON.parse(storedOrders));
+    if (storedCouponCode) setCouponCode(JSON.parse(storedCouponCode));
+    if (storedDiscount) setDiscount(JSON.parse(storedDiscount));
   }, []);
 
   // Update local storage on change
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem('couponCode', JSON.stringify(couponCode));
+  }, [couponCode]);
+
+  useEffect(() => {
+    localStorage.setItem('discount', JSON.stringify(discount));
+  }, [discount]);
 
   useEffect(() => {
     if (user) {
@@ -84,6 +102,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (userData: User) => setUser(userData);
   const logout = () => {
     setUser(null);
+    setCouponCode('');
+    setDiscount(0);
     clearCart();
   };
 
@@ -97,10 +117,28 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       paymentMethod,
     };
     setOrders(prevOrders => [newOrder, ...prevOrders]);
+    setCouponCode('');
+    setDiscount(0);
     return newOrder;
   };
 
-  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const cartTotal = subtotal - discount;
+
+  const applyCoupon = (code: string): { success: boolean, message: string } => {
+    if (VALID_COUPONS[code]) {
+      const discountPercentage = VALID_COUPONS[code];
+      const calculatedDiscount = (subtotal * discountPercentage) / 100;
+      setDiscount(calculatedDiscount);
+      setCouponCode(code);
+      return { success: true, message: `${discountPercentage}% coupon applied successfully!` };
+    } else {
+      setDiscount(0);
+      setCouponCode('');
+      return { success: false, message: 'Invalid coupon code.' };
+    }
+  };
+
 
   return (
     <ShopContext.Provider value={{
@@ -115,7 +153,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       logout,
       placeOrder,
-      cartTotal
+      cartTotal,
+      subtotal,
+      discount,
+      couponCode,
+      applyCoupon
     }}>
       {children}
     </ShopContext.Provider>
