@@ -44,6 +44,9 @@ export const Navbar: React.FC = () => {
 
           <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 2 }}>
             <Button component={RouterLink} to="/" color="inherit" data-test="nav-home-menu">Home</Button>
+            {user && (
+              <Button component={RouterLink} to="/orders" color="inherit" data-test="nav-orders">Orders</Button>
+            )}
             <Button component={RouterLink} to="/contact" color="inherit" data-test="nav-contact">Contact</Button>
           </Box>
 

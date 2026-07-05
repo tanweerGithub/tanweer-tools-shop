@@ -20,10 +20,11 @@ export interface User {
 
 export interface Order {
   id: string;
-  items: CartItem[];
-  total: number;
   date: string;
-  status: 'Processing' | 'Shipped' | 'Delivered';
+  items: CartItem[];
+  subtotal: number;
+  total: number;
+  paymentMethod: PaymentMethod;
 }
 
 export enum PaymentMethod {

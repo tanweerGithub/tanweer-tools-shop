@@ -56,6 +56,7 @@ This section lists all `data-test` attributes found in the application's pages, 
 ### `components/Navbar.tsx`
 - `nav-home`
 - `nav-home-menu`
+- `nav-orders`
 - `nav-contact`
 - `nav-user-name`
 - `nav-sign-out`
@@ -144,6 +145,12 @@ This section lists all `data-test` attributes found in the application's pages, 
 - `email`
 - `password`
 - `register-submit`
+
+### `pages/OrdersPage.tsx`
+- `page-title`
+- `order-row`
+- `order-id`
+- `order-total`
 
 ### Valid Coupon Codes
 As defined in `constants.ts`:

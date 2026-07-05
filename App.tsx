@@ -11,6 +11,7 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderSuccessPage } from './pages/OrderSuccessPage';
 import { ContactPage } from './pages/ContactPage';
+import { OrdersPage } from './pages/OrdersPage';
 
 const theme = createTheme({
   palette: {
@@ -86,6 +87,7 @@ const App: React.FC = () => {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/success" element={<OrderSuccessPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/orders" element={<OrdersPage />} />
               </Routes>
             </main>
             

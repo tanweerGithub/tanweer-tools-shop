@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { Container, Paper, Typography, Button, Box } from '@mui/material';
 
 export const OrderSuccessPage: React.FC = () => {
+  const location = useLocation();
+  const orderId = location.state?.orderId;
+
   return (
     <Container maxWidth="sm" sx={{ display: 'flex', alignItems: 'center', minHeight: '80vh' }}>
       <Paper elevation={3} sx={{ p: 6, width: '100%', textAlign: 'center', borderRadius: 4 }}>
@@ -15,7 +18,13 @@ export const OrderSuccessPage: React.FC = () => {
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph sx={{ mb: 4 }} data-test="success-message">
           Your order has been successfully placed. <br/>
-          Order ID: <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 'bold', color: 'text.primary' }}>#{Math.floor(Math.random() * 1000000)}</Box>
+          {orderId ? (
+            <>
+              Order ID: <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 'bold', color: 'text.primary' }}>#{orderId}</Box>
+            </>
+          ) : (
+            'Processing your order details.'
+          )}
         </Typography>
         
         <Button 
