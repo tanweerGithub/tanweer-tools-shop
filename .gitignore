@@ -27,3 +27,4 @@ dist-ssr
 # Test results
 test-results/
 playwright-report/
+.playwright-mcp/
