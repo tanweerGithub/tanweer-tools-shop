@@ -1,0 +1,87 @@
+{
+  "storyKey": "TS-17",
+  "linkType": { "name": "Test", "outward": "tests", "inward": "is tested by" },
+  "tests": [
+    {
+      "summary": "Orders: exactly 10 orders shows single page, no pagination controls",
+      "precondition": "Logged in as tanweer@test.com; exactly 10 orders exist in history, newest-first, on /orders.",
+      "steps": [
+        { "action": "Navigate to /orders via [data-test=nav-orders].", "expectedResult": "Exactly 10 [data-test=order-row] rows render." },
+        { "action": "Check for page-number controls and Previous/Next.", "expectedResult": "No pagination controls render (PROPOSED — not yet implemented — [data-test=pagination-prev], [data-test=pagination-next], [data-test=pagination-page-{n}] are absent per AC3)." }
+      ]
+    },
+    {
+      "summary": "Orders: 11 orders shows exactly 10 on page 1, newest-first",
+      "precondition": "11 orders exist for tanweer@test.com, newest-first, on /orders.",
+      "steps": [
+        { "action": "Navigate to /orders.", "expectedResult": "Exactly 10 [data-test=order-row] rows render (AC1)." },
+        { "action": "Read [data-test=order-id] on the first and 10th row.", "expectedResult": "First row = newest order (#11); 10th row = the 2nd-newest order." }
+      ]
+    },
+    {
+      "summary": "Orders: Next control (11 orders) shows the 1 remaining order on page 2",
+      "precondition": "11 orders exist, currently on page 1 of /orders.",
+      "steps": [
+        { "action": "Click [data-test=pagination-next] (PROPOSED — not yet implemented).", "expectedResult": "Page 2 renders exactly 1 [data-test=order-row] — the oldest order, continuing newest-first (AC2)." }
+      ]
+    },
+    {
+      "summary": "Orders: Previous control is disabled/hidden on page 1",
+      "precondition": "11 orders exist, currently on page 1 of /orders.",
+      "steps": [
+        { "action": "Inspect [data-test=pagination-prev] (PROPOSED — not yet implemented).", "expectedResult": "Control is absent or rendered disabled (AC5)." }
+      ]
+    },
+    {
+      "summary": "Orders: Next control is disabled/hidden on the last page",
+      "precondition": "11 orders exist; navigated to page 2 (the last page) of /orders.",
+      "steps": [
+        { "action": "Inspect [data-test=pagination-next] (PROPOSED — not yet implemented).", "expectedResult": "Control is absent or rendered disabled (AC5)." }
+      ]
+    },
+    {
+      "summary": "Orders: direct page-number navigation with 21 orders",
+      "precondition": "21 orders exist (3 pages of 10/10/1), currently on page 1 of /orders.",
+      "steps": [
+        { "action": "Click [data-test=pagination-page-3] (PROPOSED — not yet implemented) directly from page 1.", "expectedResult": "Page 3 renders immediately, showing the 1 oldest order, without requiring sequential Next clicks (AC4)." }
+      ]
+    },
+    {
+      "summary": "Orders: count display shows correct range on page 2 of 23 orders",
+      "precondition": "23 orders exist for tanweer@test.com; navigate to page 2 of /orders.",
+      "steps": [
+        { "action": "Read [data-test=order-count] (PROPOSED — not yet implemented).", "expectedResult": "Displays \"Showing 11–20 of 23\" exactly (AC6's own worked example)." }
+      ]
+    },
+    {
+      "summary": "Orders: zero orders shows unchanged empty state, no pagination controls",
+      "precondition": "Logged in as tanweer@test.com; no orders have been placed.",
+      "steps": [
+        { "action": "Navigate to /orders.", "expectedResult": "Existing empty-state message \"You haven't placed any orders yet.\" renders exactly as today (verified live in pages/OrdersPage.tsx); no [data-test=order-count] or pagination controls render (AC7)." }
+      ]
+    },
+    {
+      "summary": "Orders: pagination and total count persist across logout/login",
+      "precondition": "23 orders exist for tanweer@test.com; currently viewing page 2 of /orders.",
+      "steps": [
+        { "action": "Log out via [data-test=nav-sign-out], then log back in with tanweer@test.com / tanweer123, navigate to /orders, go to page 2.", "expectedResult": "Same total (23) and same \"Showing 11–20 of 23\", same 10 order rows/ids as before logout (AC8)." }
+      ],
+      "note": "Question for BA / observed-behavior flag: orders are currently persisted under a single global `orders` localStorage key (context/ShopContext.tsx), not scoped per user account. This AC will pass trivially today even under a different login, since there is no per-user isolation yet. Not a PRD-silence ambiguity — the PRD assumes per-customer history — but worth surfacing before pagination is built on top of the current persistence model."
+    },
+    {
+      "summary": "Orders: exactly 20 orders shows two full pages with Next hidden on page 2",
+      "precondition": "Exactly 20 orders exist (2 full pages of 10), currently on page 2 of /orders.",
+      "steps": [
+        { "action": "Read [data-test=order-row] count and [data-test=order-count] (PROPOSED — not yet implemented).", "expectedResult": "Exactly 10 rows render; count reads \"Showing 11–20 of 20\" (AC6)." },
+        { "action": "Inspect [data-test=pagination-next] (PROPOSED — not yet implemented).", "expectedResult": "Control is absent or rendered disabled — page 2 is the last page at this exact boundary (AC5)." }
+      ]
+    },
+    {
+      "summary": "Orders: no order lost or duplicated across all pages of a 21-order set",
+      "precondition": "21 orders exist with distinct known IDs, on /orders.",
+      "steps": [
+        { "action": "Collect [data-test=order-id] values across pages 1, 2, and 3.", "expectedResult": "21 distinct order IDs total, each appearing exactly once across the full paginated set (AC9)." }
+      ]
+    }
+  ]
+}
