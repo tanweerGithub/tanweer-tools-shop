@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Blocks a commit that adds a Playwright spec under tests/ that isn't traceable to an
+# Xray test: filename must be tests/TS-<n>.spec.ts and the file must open with an
+# "// Xray: TS-<n>" header comment (see .claude/skills/playwright-automation).
+set -euo pipefail
+
+added_specs=$(git diff --cached --name-only --diff-filter=A | grep -E '^tests/.*\.spec\.ts$' || true)
+
+if [ -z "$added_specs" ]; then
+  exit 0
+fi
+
+fail=0
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+  base=$(basename "$file")
+
+  if ! [[ "$base" =~ TS-[0-9]+\.spec\.ts$ ]]; then
+    echo "pre-commit: $file — filename must match TS-<n>.spec.ts (the Xray test key)"
+    fail=1
+  fi
+
+  if ! head -n 5 "$file" | grep -q '// Xray: TS-'; then
+    echo "pre-commit: $file — missing a '// Xray: TS-<n>' traceability header comment"
+    fail=1
+  fi
+done <<< "$added_specs"
+
+if [ "$fail" -eq 1 ]; then
+  echo ""
+  echo "Commit blocked: new Playwright specs must be traceable to an Xray test."
+  echo "See .claude/skills/playwright-automation for the spec header convention."
+  exit 1
+fi
+
+exit 0
