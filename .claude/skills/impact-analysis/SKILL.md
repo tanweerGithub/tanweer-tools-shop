@@ -18,7 +18,7 @@ gh pr diff <PR#> --repo tanweerGithub/tanweer-tools-shop --name-only
 ```
 
 (Or `gh api repos/tanweerGithub/tanweer-tools-shop/pulls/<PR#>/files --jq '.[].filename'` for
-the same list via the API. For a local unpushed branch, `git diff main...HEAD --name-only`.)
+the same list via the API. For a local unpushed branch, `git diff master...HEAD --name-only`.)
 
 ### 2. Map changed files → feature areas
 
