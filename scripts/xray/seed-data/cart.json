@@ -1,0 +1,90 @@
+{
+  "storyKey": "TS-2",
+  "linkType": { "name": "Test", "outward": "tests", "inward": "is tested by" },
+  "tests": [
+    {
+      "summary": "Cart: add to cart updates badge",
+      "precondition": "User is on the Home page (`/`); cart is empty (navbar badge at 0 or hidden).",
+      "steps": [
+        {
+          "action": "Click [data-test=add-to-cart-{id}] for a product (e.g. Claw Hammer).",
+          "expectedResult": "Navbar badge [data-test=cart-quantity] increments to 1."
+        },
+        {
+          "action": "Navigate to /cart via [data-test=nav-cart].",
+          "expectedResult": "[data-test=cart-row] shows exactly one row: [data-test=product-title] \"Claw Hammer\", [data-test=product-quantity] = 1."
+        }
+      ]
+    },
+    {
+      "summary": "Cart: increase quantity updates line total",
+      "precondition": "Cart contains Claw Hammer ($12.00) at qty 1, on /cart.",
+      "steps": [
+        {
+          "action": "Click [data-test=increase-quantity-{id}] once.",
+          "expectedResult": "[data-test=product-quantity] becomes 2."
+        },
+        {
+          "action": "Read [data-test=line-total] for that row.",
+          "expectedResult": "Line total = $24.00 (unit price x2); [data-test=cart-subtotal] updates to match."
+        }
+      ]
+    },
+    {
+      "summary": "Cart: decrease quantity updates line total",
+      "precondition": "Cart contains Claw Hammer at qty 2, on /cart.",
+      "steps": [
+        {
+          "action": "Click [data-test=decrease-quantity-{id}] once.",
+          "expectedResult": "[data-test=product-quantity] returns to 1."
+        },
+        {
+          "action": "Read [data-test=line-total] for that row.",
+          "expectedResult": "Line total = $12.00; [data-test=cart-subtotal] updates accordingly."
+        }
+      ]
+    },
+    {
+      "summary": "Cart: remove item",
+      "precondition": "Cart contains at least one item, on /cart.",
+      "steps": [
+        {
+          "action": "Click [data-test=delete-item] on a cart row.",
+          "expectedResult": "That row disappears from [data-test=cart-row]."
+        },
+        {
+          "action": "Check the navbar badge [data-test=cart-quantity] and [data-test=cart-subtotal]/[data-test=cart-total].",
+          "expectedResult": "Badge count decreases by the removed item's quantity; subtotal/total recalculate excluding the removed item."
+        }
+      ]
+    },
+    {
+      "summary": "Cart: apply valid coupon TEST10 shows discount",
+      "precondition": "Cart has items totaling $12.00 subtotal, no coupon applied, on /cart.",
+      "steps": [
+        {
+          "action": "Type \"TEST10\" into [data-test=coupon-code] and click [data-test=coupon-apply].",
+          "expectedResult": "[data-test=coupon-message] shows a success message; [data-test=cart-discount] displays \"-$1.20\" (10% of $12.00, per VALID_COUPONS)."
+        },
+        {
+          "action": "Read [data-test=cart-total].",
+          "expectedResult": "Total = subtotal minus discount = $10.80."
+        }
+      ]
+    },
+    {
+      "summary": "Cart: apply invalid coupon shows error and removes discount",
+      "precondition": "Cart has items with TEST10 already applied (discount showing), on /cart.",
+      "steps": [
+        {
+          "action": "Type \"BADCODE\" into [data-test=coupon-code] and click [data-test=coupon-apply].",
+          "expectedResult": "[data-test=coupon-message] shows an error/invalid-coupon message."
+        },
+        {
+          "action": "Check [data-test=cart-discount] and [data-test=cart-total].",
+          "expectedResult": "Discount line is removed/zeroed; cart-total reverts to the undiscounted subtotal."
+        }
+      ]
+    }
+  ]
+}

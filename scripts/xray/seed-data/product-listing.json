@@ -1,0 +1,114 @@
+{
+  "storyKey": "TS-7",
+  "linkType": { "name": "Test", "outward": "tests", "inward": "is tested by" },
+  "tests": [
+    {
+      "summary": "Product Listing: default listing loads all products",
+      "precondition": "User is on the Home page (`/`) with no filters, search, or category selected; price slider at full range.",
+      "steps": [
+        {
+          "action": "Load the Home page.",
+          "expectedResult": "All 8 [data-test=product-card] elements render, matching the full catalog in constants.ts."
+        },
+        {
+          "action": "Inspect the filter controls: [data-test=search-query], [data-test=sort], [data-test=price-slider], and each [data-test=category-*] button.",
+          "expectedResult": "Search box is empty, no category is selected/highlighted, price slider covers min-max, sort is at its default."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: filter by single category",
+      "precondition": "Home page loaded with all products visible, no filters applied.",
+      "steps": [
+        {
+          "action": "Click [data-test=category-hand-tools].",
+          "expectedResult": "Only the 4 Hand Tools products are shown: Combination Pliers, Bolt Cutters, Claw Hammer, Slip Joint Pliers."
+        },
+        {
+          "action": "Read [data-test=product-name-{id}] for every visible card.",
+          "expectedResult": "No product from another category (e.g. Thor Hammer, Safety Goggles, Sledgehammer, Tape Measure) is visible."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: filter by category with no matches",
+      "precondition": "Home page loaded, no filters applied.",
+      "steps": [
+        {
+          "action": "Click [data-test=category-novelty].",
+          "expectedResult": "Only \"Thor Hammer\" ($109.99, the sole Novelty product) is shown."
+        },
+        {
+          "action": "Drag the upper handle of [data-test=price-slider] down to $50.",
+          "expectedResult": "Zero [data-test=product-card] elements render; an empty/no-results state is shown, no console error."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: search by exact product name",
+      "precondition": "Home page loaded, no filters applied.",
+      "steps": [
+        {
+          "action": "Type \"Claw Hammer\" into [data-test=search-query].",
+          "expectedResult": "Exactly one [data-test=product-card] renders, with [data-test=product-name-{id}] reading \"Claw Hammer\"."
+        },
+        {
+          "action": "Confirm no other cards are visible.",
+          "expectedResult": "Only the single exact-match card remains on screen."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: search by partial keyword",
+      "precondition": "Home page loaded, no filters applied.",
+      "steps": [
+        {
+          "action": "Type \"Hammer\" into [data-test=search-query].",
+          "expectedResult": "Both \"Claw Hammer\" and \"Thor Hammer\" cards are shown (2 products); no non-matching product appears."
+        },
+        {
+          "action": "Read [data-test=product-name-{id}] for each visible card.",
+          "expectedResult": "Every visible product name contains the substring \"Hammer\"."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: search with no results",
+      "precondition": "Home page loaded, no filters applied.",
+      "steps": [
+        {
+          "action": "Type \"Cordless Drill\" into [data-test=search-query] (a name not present in the catalog).",
+          "expectedResult": "Zero [data-test=product-card] elements render; an empty/no-results message is shown, no console error."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: sort by price ascending",
+      "precondition": "Home page loaded, no filters applied.",
+      "steps": [
+        {
+          "action": "Select the ascending price option from [data-test=sort].",
+          "expectedResult": "Product cards reorder so [data-test=product-price] ascends top to bottom."
+        },
+        {
+          "action": "Read [data-test=product-price] for the first 3 cards in order.",
+          "expectedResult": "Order is Safety Goggles ($5.50) -> Tape Measure ($8.25) -> Slip Joint Pliers ($9.17), matching ascending price across the full catalog."
+        }
+      ]
+    },
+    {
+      "summary": "Product Listing: combined category filter + search intersection",
+      "precondition": "Home page loaded, no filters applied.",
+      "steps": [
+        {
+          "action": "Click [data-test=category-hand-tools], then type \"Pliers\" into [data-test=search-query].",
+          "expectedResult": "Only products that are BOTH Hand Tools AND match \"Pliers\" are shown: Combination Pliers and Slip Joint Pliers (2 products) - confirming intersection, not union."
+        },
+        {
+          "action": "Check for \"Bolt Cutters\" and \"Claw Hammer\" (Hand Tools but not matching \"Pliers\").",
+          "expectedResult": "Neither appears in the filtered results."
+        }
+      ]
+    }
+  ]
+}
