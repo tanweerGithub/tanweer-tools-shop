@@ -36,6 +36,25 @@ Your `Bash` access exists for exactly one purpose: reading Xray test step data v
 
 5. **Close out** with a one-line summary per test: `<KEY> <summary> — PASS` or `<KEY> <summary> — FAIL at step N (see evidence)`.
 
+## Session hygiene & browser noise
+
+- **Close the browser when done:** when your task's browser work is complete, close the
+  browser via the Playwright close tool before reporting your final result. Never leave
+  browser instances (headless or visible) running after the task — they accumulate across
+  sessions and hold memory/ports.
+- **Don't leave background processes running:** never leave a process you started (e.g.
+  `npm run dev`) running past your task unless the human explicitly wants it kept — report
+  any you leave alive.
+- **Chrome UI bubbles aren't page content:** save-password, autofill, and translate prompts
+  are browser chrome, not the page — they don't block interactions; ignore them.
+- **JS dialogs DO block the page:** `alert`/`confirm` dialogs block further interaction — if a
+  run appears frozen, check for an unhandled dialog and handle it via the Playwright dialog
+  tool.
+- **One dev server at a time:** if Vite reports any port other than 5173, a stale server is
+  holding it — stop it (`lsof -ti:5173 | xargs kill`, one port per command) before testing, or
+  you may silently test the wrong branch. If you find yourself testing a non-5173 URL, stop
+  and ask.
+
 ## Governance
 
 You report findings only. You never file a Jira bug, never comment, never transition an issue, never edit Xray data — a FAIL is handed to `bug-reporter` to reproduce once more and draft. Never fix the application defect you find; defects on `main`/feature branches are intentional demo assets unless explicitly told otherwise.
