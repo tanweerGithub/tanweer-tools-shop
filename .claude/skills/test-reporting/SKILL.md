@@ -8,6 +8,20 @@ description: Use when writing an end-of-testing summary, deciding whether a QA t
 Governing document: Confluence **"ToolsShop Test Strategy"** — Exit criteria and Bug workflow
 sections.
 
+## Required outputs
+
+A completed testing pass produces **both** of the following — a run with only one is
+incomplete:
+
+1. The **summary comment** (format below), posted on the QA subtask.
+2. A **Test Execution** recorded via `scripts/xray/` (`create-test-execution.mjs`, then
+   `updateTestRunStatus` per test — see "Updating the Xray execution" below), with per-test
+   statuses and a date. The Xray execution and the Jira comment must state the same results.
+
+**Mirror-sync note:** the exit criteria in this skill mirror the Confluence "ToolsShop Test
+Strategy" page's Exit Criteria section. The two are updated together — if one changes, flag
+the other for a matching edit (the Confluence side is a manual edit, not agentic).
+
 ## Summary comment format
 
 Posted as a comment on the QA subtask (or story, if there's no subtask) at the end of a

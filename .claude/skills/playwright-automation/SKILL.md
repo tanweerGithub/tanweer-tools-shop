@@ -24,6 +24,18 @@ belongs to, so traceability survives even if the file is read outside Jira:
 import { test, expect } from '@playwright/test';
 ```
 
+## Sourcing selectors from the test case
+
+When converting an Xray manual test case to a spec, read selectors from the step's **Data**
+field (per `test-case-design`'s step-writing convention) — not from the Action/Expected
+Result prose, which is plain human language. Only for **legacy tests (TS-23..TS-40)**, which
+predate that convention and carry selectors inline in the step text, fall back to parsing them
+out of the prose.
+
+**Seed data is write-once**, same rule as `test-case-design`: `scripts/xray/seed-data/*.json`
+is a creation payload, not a live source. Once a test exists, read its current steps from
+Xray — never from the seed JSON.
+
 ## Selectors
 
 Exactly the same rule as `test-case-design`: every selector is a `data-test` attribute listed

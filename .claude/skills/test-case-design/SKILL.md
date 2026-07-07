@@ -16,11 +16,28 @@ Every test case has four parts:
    `scripts/xray/seed-data/*.json`) are the canonical examples.
 2. **Precondition** — one sentence of plain text, not a step. States the state the app/data
    must already be in (e.g. "Cart contains Claw Hammer ($12.00) at qty 1, on /cart.").
-3. **Steps** — numbered; each step is an `{ action, expectedResult }` pair. The action names
-   the exact control; the expected result names the exact observable outcome.
+3. **Steps** — numbered; each step is an `{ action, data, expectedResult }` triple. See
+   "Step-writing convention" below for how the three fields divide up.
 4. **Expected values are concrete** — real prices, exact totals, exact copy. Never write
    "the correct total" — write "$10.80". Never write "an error appears" if the real message
    is knowable — quote it.
+
+## Step-writing convention: plain language, selectors in Data
+
+Action and Expected Result are written in plain human/user language — no selector notation,
+no `data-test` ids, no raw values buried in the prose. A tester unfamiliar with the codebase
+should be able to read the step and know what to do and what to expect without knowing the
+DOM. All `data-test` selectors and concrete test data values go in the step's **Data**
+field — the `createTest` mutation's `data` property (see Write path).
+
+Example:
+
+- **Action:** Click the decrease-quantity button on the item's row
+- **Data:** `decrease-quantity-{id}`; `product-quantity`; `line-total`; `cart-subtotal`
+- **Expected Result:** Quantity shows 1; line total $12.00; subtotal updates accordingly.
+
+**Legacy note:** TS-23..TS-40 predate this convention — their step text has selectors inline.
+Do not migrate them; apply this convention to new tests going forward.
 
 ## Where expected values come from
 
@@ -36,10 +53,30 @@ Never invent a number or string. Every concrete value in a step must be traceabl
 If you can't trace a value to constants.ts or observed behavior, don't write the test yet —
 go verify it live first.
 
+## UI text and message copy
+
+The same traceability rule that applies to numbers applies to message/label copy. Expected UI
+text in a step must be traceable to one of:
+
+- **Live behavior you verified** — you actually observed the exact string in the running app.
+- **The PRD** — quoted verbatim from the Confluence page.
+
+If neither is available (the PRD is silent on the exact copy and you haven't verified it
+live), don't invent the string. Write the expected result as a **pattern**, not prose that
+looks like a quote — e.g. "a success message is shown" rather than "You have successfully
+placed your order!" — and raise the exact copy as a question for the BA (see Ambiguous or
+silent requirements below).
+
+**Worked example (2026-07-07 incident):** TS-42, TS-43, and TS-48 each asserted invented
+success-message text that was never verified live or present in the PRD. Corrected by
+replacing the invented strings with pattern-level expected results plus a BA question about
+the exact copy.
+
 ## Selectors
 
-Every `action`/`expectedResult` that references a UI element uses a `data-test` selector, and
-**only** one listed in `docs/feature-map.md` Section 3. Before using a selector:
+Every `data-test` selector a step needs goes in that step's **Data** field (never inline in
+Action/Expected Result prose — see Step-writing convention above), and must be **only** one
+listed in `docs/feature-map.md` Section 3. Before using a selector:
 
 - Grep it to confirm it's real and current: `grep -rn "data-test.*=.*\"<name>\"" pages/ components/`
   (or the template-literal form for selectors like `add-to-cart-{product.id}`).
@@ -96,7 +133,7 @@ step data). Use the scripts in `scripts/xray/`:
     "storyKey": "TS-7",
     "linkType": { "name": "Test", "outward": "tests", "inward": "is tested by" },
     "tests": [
-      { "summary": "...", "precondition": "...", "steps": [{ "action": "...", "expectedResult": "..." }] }
+      { "summary": "...", "precondition": "...", "steps": [{ "action": "...", "data": "...", "expectedResult": "..." }] }
     ]
   }
   ```
@@ -107,6 +144,11 @@ step data). Use the scripts in `scripts/xray/`:
 - After creation, link each Test to its story/epic — see Linking below.
 - `node scripts/xray/create-test-execution.mjs <summary> <date> <testIssueId...>` — records a
   historical execution once tests exist.
+
+**Seed data is write-once.** `scripts/xray/seed-data/*.json` files are creation payloads for
+`create-test.mjs`, nothing more. Once a test exists in Xray, Xray is the source of truth for
+its current content — read existing tests via the GraphQL client (see `test-executor`'s fetch
+pattern), never by re-reading the seed JSON, which never reflects edits made later in Xray.
 
 ## Linking convention (documented, counter-intuitive)
 

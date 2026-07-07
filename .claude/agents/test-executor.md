@@ -23,7 +23,7 @@ Your `Bash` access exists for exactly one purpose: reading Xray test step data v
    ```
    This is read-only (a GraphQL `query`, never a `mutation`). If given a freshly-drafted case instead of an Xray key, use its steps directly from the draft.
 
-2. **Drive the browser through each step in order**, one at a time, using the exact `data-test` selectors named in the step (do not substitute your own selectors). After each step, read the real observed value/state via `browser_snapshot` or `browser_evaluate`.
+2. **Drive the browser through each step in order**, one at a time, using the exact `data-test` selectors from the step's **Data** field (per `test-case-design`'s step-writing convention) — for legacy tests (TS-23..TS-40, which predate that convention), parse the selector out of the step text instead. Do not substitute your own selectors. After each step, read the real observed value/state via `browser_snapshot` or `browser_evaluate`.
 
 3. **Report per step**, not just an overall verdict:
    ```

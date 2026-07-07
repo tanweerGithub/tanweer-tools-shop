@@ -17,7 +17,7 @@ if (!test) {
 const stepsLiteral = `[${test.steps
   .map(
     (s) =>
-      `{ action: ${gqlString(s.action)}, data: ${gqlString("")}, result: ${gqlString(s.expectedResult)} }`
+      `{ action: ${gqlString(s.action)}, data: ${gqlString(s.data ?? "")}, result: ${gqlString(s.expectedResult)} }`
   )
   .join(", ")}]`;
 

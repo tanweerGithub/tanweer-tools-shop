@@ -55,6 +55,40 @@ spec). A bug report with no story link and no failing-test link is incomplete.
   and reopen comments are real signal, not noise; when retesting a "fixed" bug, always leave a
   comment either way (fixed-confirmed, or still-reproduces-reopening).
 
+## Duplicate search (mandatory, before filing)
+
+Before drafting a new bug, search Jira for existing bugs against the same feature/symptom
+(`searchJiraIssuesUsingJql`, e.g. `project = TS AND issuetype = Bug AND text ~ "<symptom>"`).
+Distinguish two outcomes:
+
+- **True duplicate** — same root cause, same repro path, same observable defect. Do not file
+  a new issue; comment on the existing one with new evidence/environment if it adds
+  information (e.g. "also reproduces on Netlify main, 2026-07-07").
+- **Distinct defect sharing a repro path** — same steps surface a *different* symptom or root
+  cause. File it separately, cross-link it to the related bug, and state explicitly in the
+  description why it's distinct, not a dup.
+
+**Worked example: TS-58 vs TS-16.** Both start from "apply coupon TEST10, increase
+quantity" on a cart with a coupon already applied — but they're different defects:
+
+- **TS-16** — one-cent display rounding inconsistency in the recalculated discount (Total
+  shows $26.89 instead of $26.88 per the $28.30 − $1.42 arithmetic).
+- **TS-58** — the discount doesn't recalculate at all: it stays frozen at the dollar amount
+  computed when the coupon was first applied (e.g. $1.42 from a $14.15 cart persists even
+  after the cart grows to $28.30, where 10% would be $2.83), on both Cart and Checkout.
+
+Same repro path, different symptom and different root cause (rounding vs. no-recalculation) —
+filed as a separate bug, cross-linked to TS-16 as related, not merged into it.
+
+## Priority rule: production verification
+
+If a defect is verified to reproduce on the hosted production environment
+(`https://tanweertoolsshop.netlify.app`, `main`), that raises its priority relative to the same
+defect only seen on a feature branch — real users are exposed, not just an in-progress branch.
+Never assume an environment claim ("also happens on prod") — verify it live before using it to
+justify a priority bump; if you haven't checked, say "not yet verified on production" rather
+than asserting it.
+
 ## Severity (impact)
 
 | Severity | Definition | Example |
