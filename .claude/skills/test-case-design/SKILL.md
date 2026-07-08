@@ -82,6 +82,16 @@ listed in `docs/feature-map.md` Section 3. Before using a selector:
   (or the template-literal form for selectors like `add-to-cart-{product.id}`).
 - Never use a selector from memory or from a similar-sounding prior project. feature-map.md
   can go stale — if grep doesn't find it, treat the map as wrong and flag it, don't guess.
+- The code under test for a story is the branch of the PR linked on its dev subtask (story →
+  dev subtask → PR → branch). Before marking any selector `[PROPOSED]`, verify whether it
+  already exists on that branch by reading the branch's files directly via git — e.g.
+  `git show origin/<branch>:pages/CheckoutPage.tsx` or
+  `git grep 'data-test' origin/<branch> -- pages/` — never by assuming the session's local
+  checkout is the code under test. Mark such selectors `[VERIFIED on <branch>]`. `[PROPOSED]`
+  is reserved for selectors that exist on no branch yet.
+
+  **Worked example (2026-07-07):** `checkout-discount` was marked `[PROPOSED]` against
+  `master` while it already existed on `feature/coupon-at-checkout`.
 
 ## Design heuristics
 

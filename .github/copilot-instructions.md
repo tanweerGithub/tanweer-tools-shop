@@ -19,8 +19,13 @@ after Xray test IDs.
   API / Atlassian MCP (`getJiraIssue` on a Test issue only returns the precondition, embedded
   in `description`). `scripts/xray/` is the write (and read) path for step data.
 - The main repo clone stays on `master` permanently — agents (`.claude/agents/`), skills
-  (`.claude/skills/`), and scripts (`scripts/`) exist only there. Feature branches are checked
-  out via `git worktree` at `../ts-branch`, not by switching branches in the main clone.
+  (`.claude/skills/`), and scripts (`scripts/`) exist only there. `../ts-branch` is a worktree
+  serving `feature/coupon-at-checkout` for LIVE EXECUTION at localhost:5173. For READING branch
+  code, agents use `git show` / `git grep` against `origin/<branch>` — no worktree or checkout
+  required.
+- The app-under-test URL is PROVIDED to agents (default `localhost:5173`, or
+  `PLAYWRIGHT_BASE_URL`) — agents never infer which branch a URL serves; the human confirms
+  what the URL is serving before execution. Test executors state which URL they tested.
 - Absence of evidence via your tools is not absence of the thing itself. If a tool can't see
   something (a Jira field, an Xray step, a file), report "not visible to my tools" — never
   report "does not exist."
