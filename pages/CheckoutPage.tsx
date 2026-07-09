@@ -3,13 +3,13 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import { PaymentMethod } from '../types';
 import { ArrowLeft } from 'lucide-react';
-import { Container, Grid, Paper, Typography, Box, FormControl, InputLabel, Select, MenuItem, TextField, Button, Alert, Link } from '@mui/material';
+import { Container, Grid, Paper, Typography, Box, FormControl, InputLabel, Select, MenuItem, TextField, Button, Alert, Link, Divider } from '@mui/material';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart, cartTotal, user, clearCart, placeOrder } = useShop();
+  const { cart, subtotal, cartTotal, discount, couponCode, user, clearCart, placeOrder } = useShop();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.BankTransfer);
-
+  
   if (cartTotal === 0) {
      navigate('/cart');
      return null;
@@ -17,7 +17,7 @@ export const CheckoutPage: React.FC = () => {
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    const newOrder = placeOrder(cart, cartTotal, cartTotal, paymentMethod);
+    const newOrder = placeOrder(cart, subtotal, cartTotal, paymentMethod);
     setTimeout(() => {
         clearCart();
         navigate('/success', { state: { orderId: newOrder.id } });
@@ -27,9 +27,9 @@ export const CheckoutPage: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
         <Box sx={{ mb: 4 }}>
-           <Button
-             component={RouterLink}
-             to="/cart"
+           <Button 
+             component={RouterLink} 
+             to="/cart" 
              startIcon={<ArrowLeft size={20} />}
              color="inherit"
              data-test="back-to-cart"
@@ -41,7 +41,7 @@ export const CheckoutPage: React.FC = () => {
         <Typography variant="h3" fontWeight="bold" align="center" gutterBottom data-test="page-title">
             Checkout
         </Typography>
-
+        
         <Grid container spacing={4} sx={{ mt: 2 }}>
             {/* Billing Address Mock */}
             <Grid item xs={12} md={6}>
@@ -72,7 +72,7 @@ export const CheckoutPage: React.FC = () => {
                     <form onSubmit={handlePlaceOrder}>
                         <FormControl fullWidth sx={{ mb: 3 }}>
                             <InputLabel>Payment Method</InputLabel>
-                            <Select
+                            <Select 
                                 value={paymentMethod}
                                 label="Payment Method"
                                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
@@ -100,26 +100,37 @@ export const CheckoutPage: React.FC = () => {
                                  <Typography variant="body2">Account: 123456789</Typography>
                              </Alert>
                         )}
-
+                        
                         {paymentMethod === PaymentMethod.GiftCard && (
-                             <TextField
-                                fullWidth
-                                label="Gift Card Number"
-                                required
-                                data-test="gift-card-number"
+                             <TextField 
+                                fullWidth 
+                                label="Gift Card Number" 
+                                required 
+                                data-test="gift-card-number" 
                              />
                         )}
 
-                        <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 3, mt: 3 }}>
-                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                                 <Typography variant="subtitle1">Total to Pay:</Typography>
-                                 <Typography variant="h4" fontWeight="bold" data-test="total">${cartTotal.toFixed(2)}</Typography>
+                        <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 3, mt: 3, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <Typography color="text.secondary">Subtotal</Typography>
+                              <Typography>${subtotal.toFixed(2)}</Typography>
+                            </Box>
+                            {discount > 0 && (
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', color: 'success.main' }} data-test="checkout-discount">
+                                <Typography>Discount ({couponCode})</Typography>
+                                <Typography>-${discount.toFixed(2)}</Typography>
+                              </Box>
+                            )}
+                            <Divider sx={{ my: 1 }} />
+                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                 <Typography variant="h6" fontWeight="bold">Total to Pay</Typography>
+                                 <Typography variant="h5" fontWeight="bold" data-test="total">${cartTotal.toFixed(2)}</Typography>
                              </Box>
-                             <Button
-                                type="submit"
-                                variant="contained"
-                                color="success"
-                                fullWidth
+                             <Button 
+                                type="submit" 
+                                variant="contained" 
+                                color="success" 
+                                fullWidth 
                                 size="large"
                                 data-test="finish"
                             >
