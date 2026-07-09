@@ -1,13 +1,17 @@
 # ToolsShop Agentic QA — Demo Runbook
 
-*The seven-act live demo, as an operational script. Rehearse against this twice (Checkpoint 10); deliver from it forever. Demo tool: Claude Code in the repo folder. Target: ~40 minutes + questions.*
+*The seven-act live demo, as an operational script. Rehearse against this twice (Checkpoint 10); deliver from it forever. Demo tool: Claude Code in the repo folder — ALL SEVEN ACTS IN ONE SESSION (acts feed each other context). Narration + agent briefings: docs/demo-presenter-script.md. Target: ~40 minutes + questions.*
 
 ---
 
 ## Pre-flight checklist (run 30 minutes before, every time)
 
-- [ ] `cd` into the repo; `git status` clean, **on master**
-- [ ] `npm run dev` running → http://localhost:5173 loads
+- [ ] `cd` into the repo; `git status` clean, **on master** — and `git branch --show-current` says master BEFORE launching claude (agents/skills/scripts only exist on master; the session inventories them at launch)
+- [ ] Worktree exists: `git worktree list` shows ../ts-branch on feature/coupon-at-checkout (create once: `git worktree add ../ts-branch feature/coupon-at-checkout && ln -s "$PWD/node_modules" ../ts-branch/node_modules`)
+- [ ] **Sprint 1 is STARTED** (Backlog view — if the button still says "Start sprint", click it; Act 1's narrative assumes an active sprint)
+- [ ] Optional cosmetic: Test Repository folders (Product Listing/Cart/Auth/Checkout) with tests dragged in — prettier screens, zero functional impact
+- [ ] docs/demo-presenter-script.md open on a second screen or printed
+- [ ] Dev server running **in its own separate terminal** (never as the Claude session's child): serve MASTER for the tour and Acts 1–3, ready to swap to the worktree for Act 4
 - [ ] Netlify site loads (backup environment)
 - [ ] Fresh `claude` session started AFTER any file changes (`/exit` first if unsure — capability inventory loads at launch)
 - [ ] `/mcp` shows atlassian connected (re-OAuth if expired — do this now, not on stage)
@@ -19,6 +23,8 @@
 
 ## The one rule on stage
 Every write the agents propose gets read aloud before you approve it. The gates are not friction to hide — they ARE the governance story.
+
+**The approval heuristic (the whole decision, three questions):** (1) Anything factually wrong — numbers, keys, claims? (2) Writing to the wrong place / destructive? (3) Breaking a rule you explicitly know? Three no's → approve and move. Polish is NOT a gate: a draft that could be 5% better ships at 95% — "the agent argued P2, I might argue P1; that judgment call is what stays human" is better theater than perfection. If something looks wrong, plain words are a complete instruction ("the total looks off — recheck B"). No prompt-craft needed on stage; the runbook's seven prompts plus approve/reject/plain-feedback is the entire vocabulary.
 
 ---
 
@@ -41,13 +47,13 @@ Every write the agents propose gets read aloud before you approve it. The gates 
 **Talking point:** the ambiguity flags ARE the demo — the agent found the PRD's blind spots. (You know what lives in one of them.) Approve pushing the suite to Xray; show the tests appearing under TS-10's coverage panel: NOTRUN.
 
 ## Act 4 — Execute (~10 min, the showstopper)
-**Setup on stage:** `git checkout feature/coupon-at-checkout` + restart dev server (narrate: "testing the dev's unmerged branch, per entry criteria").
-**Type:** `Use the test-executor agent: execute the coupon suite against localhost.`
+**Setup on stage (worktree — the main repo NEVER leaves master):** in the dev-server terminal, stop the master server, then `cd ../ts-branch && npm run dev` → localhost:5173 now serves the branch. Sanity glance: apply TEST10, open checkout — discount line visible = branch confirmed. Narrate: "testing the dev's unmerged branch, per entry criteria — served from a parallel worktree so my agent tooling stays on master."
+**Type:** `Use the test-executor agent: execute the tests created for TS-10 in the previous step against localhost — get the keys from Xray's coverage on TS-10 if needed.`
 **Expect:** step-by-step PASS on the happy paths (discount now correct at checkout — the dev's fix works)… then the cart-change case: discount stays frozen at the old dollar amount. FAIL with observed numbers (e.g. apply TEST10 on $14.15 → change qty to 2 → discount still $1.42, total $26.89 — and yes, that's also off by a cent: TS-16's sibling).
 **Talking point:** genuine failure, live browser, exact values. The dev fixed what the PRD specified and missed what it didn't — which the designer flagged one act ago. Nothing here was staged tonight; the defect has been in the app since before the PR.
 
 ## Act 5 — Report the bug (~5 min)
-**Type:** `Use the bug-reporter agent on the cart-change failure from the executor.`
+**Type** (substitute the actual finding — reached either via the executor's own discovery or via your probe): `Use the bug-reporter agent on the <stale-discount / cart-change> finding from the executor.`
 **Expect:** one live re-confirmation, then a draft per the template: exact values, Sev-2 (customer charged wrong amount — cite the matrix), links to TS-10 + the failing test. Approval gate → file it → open the new bug in Jira; walk the traceability chain: story → test → bug.
 **Talking point:** compare against the Bug Report Template Confluence page — field for field.
 
@@ -77,7 +83,12 @@ Every write the agents propose gets read aloud before you approve it. The gates 
 `project = TS AND created >= "<start time>" ORDER BY created DESC`
 → bulk-select → Delete. Cascades links + Xray data. Then: TS-12 → To Do; delete demo comments on TS-10/TS-12 (comment ⋯ → Delete).
 
-**Git:** `git checkout master` · `git branch -f feature/coupon-at-checkout origin/feature/coupon-at-checkout` (drops local demo commits) · `git clean -fd tests/ scripts/xray/seed-data/` if stray files remain. Never re-clone; the permanent environment is all committed.
+**Jira/Xray — the demo layer is everything above the baseline key:**
+`project = TS AND issuekey > TS-41` → bulk change → delete (cascades links + Xray data). Then TS-12 → To Do; delete demo comments on TS-12/TS-10. (Keys are never reused — next run creates TS-58+; nothing above 41 is number-dependent.)
+
+**Git (main repo, already on master):** `git restore .` · `git clean -fd tests/ scripts/xray/seed-data/` for demo files · `git log origin/master..master` must be empty (`git reset --hard origin/master` if Act 6 commits linger). KEEP the worktree — permanent infrastructure. Never re-clone.
+
+**Reset verification (60s):** TS-10 coverage panel empty · Checkout folder empty · TS-12 To Do with no demo comments · board matches docs/toolsshop-environment-walkthrough.md.
 
 **During the FIRST reset, build the reset script:** scripts/jira/reset-demo.mjs — REST API (ATLASSIAN_EMAIL + ATLASSIAN_API_TOKEN from env), --since argument, dry-run default, typed confirmation before deleting, transitions TS-12 back, lists demo comments for manual removal. Turns reset into a two-minute command. (The MCP has no delete tools — the REST API does; this is the wrap-the-API pattern again.)
 
@@ -86,6 +97,10 @@ Every write the agents propose gets read aloud before you approve it. The gates 
 - Xray trial/pricing decision date: ______
 
 ## Known wobble points
+- LAUNCH-BRANCH TRAP (this one ended a session): launching claude while the repo is on the feature branch = no agents, no skills, no scripts in the inventory (they don't exist on that branch). Subagent roster is read ONCE at launch; skills may rescan, agents do not. Fix: main repo lives on master forever; the worktree serves the branch; /exit + relaunch if the roster is ever wrong.
+- Dev server as the session's child dies on /exit — run it in its own terminal ("Move to background and exit" is the rescue if you forget)
+- PORT DRIFT: Vite announcing any port other than 5173 means a stale dev server holds it — kill it (lsof -ti:5173 | xargs kill, one port per command) before proceeding, or agents may silently test the wrong branch. One dev server alive at a time, always.
+- BROWSER ACCUMULATION: Playwright MCP browsers stay open after tasks unless closed — hygiene rule now in the executor/automation skill (close on task completion); manually sweep stray Chromium instances during pre-flight.
 - First MCP call after idle: slow (pre-warm)
 - OAuth expiry: re-auth via /mcp, off-stage
 - Coverage panels: sometimes need a refresh to recompute

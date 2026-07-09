@@ -3,7 +3,7 @@
 **Project:** Build a realistic, end-to-end QA workflow demo powered by agentic AI — **GitHub Copilot agent mode in VS Code** + MCP servers + Agent Skills + Custom agents (subagents) + Hooks
 **Product under test:** ToolsShop — https://github.com/tanweerGithub/tanweer-tools-shop (React + Vite + TypeScript e-commerce demo app)
 **Audience:** QA engineers already trained on prompting, MCP, skills, subagents, hooks, and VS Code customization
-**Builder note:** Trainees use GitHub Copilot. You also have Claude Code installed — keep it as an optional secondary builder and as a live portability demo: VS Code automatically reads skills from `.claude/skills/` and agents from `.claude/agents/`, so the same artifacts run in both tools. We author everything in the canonical Copilot locations (`.github/...`).
+**Builder note (updated 2026-07-05):** **Claude Code is the primary BUILDER** (environment setup, seeding, authoring — preserves Copilot model limits); **GitHub Copilot in VS Code is the DEMO tool** trainees see. Interop plan: skills and agents are authored in `.claude/skills/` and `.claude/agents/` — Claude Code uses them natively during the build, and VS Code Copilot also reads those locations for the demo. Project instructions live once in `.github/copilot-instructions.md`, imported into Claude Code via a root `CLAUDE.md` containing `@.github/copilot-instructions.md`. MCP config exists twice by design: `.vscode/mcp.json` (Copilot) and `.mcp.json` (Claude Code project scope) — both committed. Copilot-only features (handoffs, Copilot tool names) get added/validated in the Checkpoint 8 VS Code pass and during Checkpoint 10 rehearsal — that is where Copilot usage is spent.
 
 **How to use this document:** Work through checkpoints in order. Each checkpoint is designed to be completed in ONE fresh Copilot agent-mode session with limited context. At the start of each session, reference this document and the checkpoint's "Session kickoff prompt." Mark items done as you go — this file is the single source of truth for project state. Commit it to the repo at `docs/qa-agentic-training-checkpoints.md`.
 
@@ -11,10 +11,26 @@
 
 - **Checkpoint 0: complete** (pending: GitHub-for-Jira app install, teammates accepting invites)
 - **Checkpoint 1: complete** — all three MCP smoke tests passed
+- **Checkpoint 9: complete (2026-07-06)** — Playwright baseline: config (testIdAttribute data-test), page objects, specs TS-23..30, 8/8 green on localhost master. Pre-commit hook (plain bash, prepare-wired) blocks non-conforming specs; rejection demonstrated live. STAR FINDING: automation caught a wrong oracle — TS-27's manual expected result said 2 matches for "Hammer" but Sledgehammer also matches (case-insensitive substring): 3 products. Missed by authoring agent + both human reviewers; corrected in Xray with dated note; TS-41's historical PASSED left as honest history. Act 6 story.
+- **Checkpoint 8: complete (2026-07-06)** — seven agents in .claude/agents/, committed and pushed; all simulation-tested against live data, then fresh-session acceptance: qa-daily-briefing dispatched via real Task tool (4/4 briefing correct), test-executor drove Playwright on TS-31 (PASS with observed values), negative check confirmed tool-level enforcement (read-only agent could not comment). Findings: defect #5 CONFIRMED by test-designer (orders not scoped per-user — cross-user visibility on /orders); bug-reporter found TS-16 missing its story link (left as-is, deliberate); briefing agent falsely asserted "PR merged" → epistemic rule added (never assert what your tools can't observe); escalation lesson captured (subagent scoping restricts the subagent, not the session — human approval is the last layer; junk comment on TS-12 deleted). Bash-in-agent caveat logged: instruction-scoping ≠ tool enforcement.
+- **Checkpoint 7: complete (2026-07-06)** — five skills authored, committed, pushed (.claude/skills/): test-case-design, bug-reporting, impact-analysis (main→master fix applied), playwright-automation, test-reporting. All independently reviewed. Auto-load acceptance test PASSED in a fresh session: skill self-loaded on "design two test cases for the contact form", verified behavior live via Playwright before asserting, used only real selectors, ended on the governance gate. The two contact-form cases are reserved as a trainee exercise (target epic TS-6).
+- **Checkpoint 6: complete (2026-07-05)** — Xray fully provisioned in team-managed TS (work types created manually + mapped; Coverable = Story AND Epic; Defect = Bug; Coverage issue-link relation = Test/outward-tests). Test repo: Product Listing TS-23..30 → TS-7; Cart TS-31..36 → TS-2; Auth TS-37..40 → TS-3; execution TS-41 (8 PASSED, start backdated 2026-06-20; finish-date field unavailable on type — accepted); TS-16 ↔ TS-35 Defect link. Write path: Xray GraphQL (scripts/xray/ + seed-data JSON, env creds); MCP for links. Gotchas logged: MCP createIssueLink params behave INVERTED (inwardIssue=Test); no link deletion in MCP; coverage requires link-relation setting + coverable types. ENVIRONMENT BUILD COMPLETE. Trainee-facing tour: docs/toolsshop-environment-walkthrough.md.
+- **Checkpoint 5: complete (2026-07-05)** — 22 issues seeded in TS: epics TS-1..6; Story A TS-7 (Done, subtasks TS-8/9); Story B TS-10 (In Progress; dev TS-11 Done w/ PR link, QA TS-12 To Do — the demo trigger state); Story C TS-13 (dev TS-14 In Progress, QA TS-15 blocked-by-comment); Bug D TS-16 (Reopened, real rounding defect); Story E TS-17 (subtasks TS-18/19); backlog TS-20/21/22. BA reporter on all stories. PR #1 renamed "TS-11: ..." (verified). MCP gaps found: no sprint/board ops (manual sprint needed); comments post as token identity only. Manual closers pending: drag TS-7/10/13/16/17 into Sprint 1 + start it; install GitHub for Jira app; optional re-post of TS-16 dev comment from the dev account.
+- **Checkpoint 4: complete (2026-07-05)** — Confluence space **TTS** ("Tanweer Tools Shop", created manually; space creation not in MCP) with 4 pages: Coupon PRD (deliberate silences intact: casing/recalc/rounding), Order History PRD (airtight, AC1-AC9), Test Strategy (regression policy = Regression Guardian's procedure), Bug Template (Sev/Priority matrix, real $12.73/$14.15 example). Jira project **TS** created manually (Team-managed Scrum; statuses incl. Reopened; Epic/Subtask built-in; TTS space connected to project pages). All 3 users Active.
+- **Checkpoint 3: complete (2026-07-05)** — order history live on origin/master (real persisted order IDs); PR #1 open with exactly 3 coupon files (CartPage, CheckoutPage, ShopContext); verified independently. Answer-key defects: stale discount on cart change (master + branch), one-cent rounding display mismatch (master + branch), case-sensitive coupons (ambiguity), discount-lost-at-checkout (master only — fixed by PR #1). Builder switched to Claude Code mid-checkpoint; gh CLI replaces GitHub MCP for the build.
+- **Checkpoint 2: complete (2026-07-05)** — `docs/feature-map.md` (Section 3 verified 1:1 against grep after two correction rounds — see training notes: hallucinated selectors, then patch-vs-regenerate) and `.github/copilot-instructions.md` committed
 - **Environment facts:** repo at `/Users/Tanweer/Documents/Me/build/qa-project/tanweer-tools-shop` · site `ai-qa-hub.atlassian.net` · Confluence space "Tanweer Tools Shop" · default Jira project key **KAN** (we create the proper **TS** Scrum project in Checkpoint 5) · Xray installed on 30-day trial (~US$10/mo after — decision due before trial ends) · Atlassian API token + Xray API keys created
 - **Code audit finding (2026-07-05):** a coupon feature ALREADY EXISTS on the Cart page (TEST10 10%, OFF20 20%) and `main` contains genuine bugs around it (catalogued in the trainer's private answer key). There is NO order history feature yet. Checkpoints 2–3 updated accordingly.
 - **Hosted environment:** https://tanweertoolsshop.netlify.app — matches the repo (same product IDs/code). The discount-lost-at-checkout defect was verified LIVE on this site via browser automation (cart total $12.73 with TEST10 → checkout "Total to Pay" $14.15, no discount line). Use Netlify as the classroom test environment (zero trainee setup) and localhost for the dev/PR-branch testing scenarios. Note: 2 console errors observed on page load — capture in the audit.
-- **Next up:** Checkpoint 2 (repo audit + custom instructions)
+- **Repo conventions:** default branch is **master** (not main). Every checkpoint's work must be committed AND pushed to origin before the checkpoint is marked done — local-only commits caused the dirty PR #1 diff (failure pattern #4 for the training module).
+- **Branch/key note:** Checkpoint 3 branches use descriptive names (`feature/coupon-at-checkout`); after Checkpoint 5 creates the real Jira keys, update the PR title to start with the Story B dev-task key so GitHub-for-Jira links it.
+- **Checkpoint 10, run 1: COMPLETE (2026-07-07)** — full seven-act run executed end to end (partly live in session 1 of the training, finished solo). Findings: 3 oracle defects (invented success-message copy, TS-42/43/48 — corrected in Xray, dated notes); stale-discount defect rediscovered unprompted by executor → filed as TS-58 (Sev-2/P1, confirmed on production, dedupe-analyzed against TS-16 as DISTINCT defects sharing a repro path); execution TS-59 recorded; reporter refused closure citing exit criteria. Operational failures fixed: launch-branch trap (agents/skills absent on feature branch) → worktree design now canonical; oracle-vs-app-defect triage is human work; step-writing style needed humanizing (Action/Data/Expected convention).
+- **RESET COMPLETE (2026-07-07)** — demo layer swept (issuekey > TS-41 → zero, verified), TS-12 To Do, comments cleared (incl. TS-10 BA question — deletion is the standing decision), git at origin/master with docs committed, worktree intact, evidence PNGs confirmed never committed. Board matches the walkthrough.
+- **NEXT: hardening session** — 7-item skill/instructions pass (UI-text traceability; Action/Data/Expected steps; execution-recording mandatory; duplicate-search + production-priority rules; JSON-is-birth-certificate; Data-field selector consumption w/ TS-23..40 legacy fallback; Environment-facts + absence-of-evidence rule) → commit/push → manual Confluence mirror-note → rehearsal 2 (validates reset + hardening together) → reset → session 2 with trainees.
+- **Backlog (discussed, unbuilt):** Checkpoint 11 portable starter-kit for trainees; prd-authoring skill (transcript → PRD → stories); quick-bug agent; Test Repository folders as optional cosmetic.
+- **Refinement log (iterative, post-rehearsal-2):** (1) test-executor closing duty — after scripted execution, exploratory pass over the story's flagged BA questions/ambiguities: exercise each, record observed behavior with exact values, report without pass/fail judgment (turns the stale-discount discovery from incidental luck into system; keeps oracles clean). (2) Determinism map of the demo's key beat: designer's ambiguity flag = engineered-deterministic (feature-map §5 + skill's worked example); executor's live discovery = probabilistic; presenter's probe = deterministic backstop — teach this three-link chain explicitly.
+- **Copilot validation: passed (2026-07-06).** DEMO TOOL DECISION: demo runs in Claude Code; Copilot kept working as trainee-side second stage (BYOK/free tier). Handoffs shelved to docs/copilot-handoffs-backup.md.
+- **Next up:** Checkpoint 10 — two dry runs from docs/demo-runbook.md; fill docs/reset-guide.md during the first reset. Then (optional, discussed) Checkpoint 11: portable starter-kit extraction for trainees.
 
 ---
 
@@ -98,6 +114,7 @@
   - "Fetch the README of tanweerGithub/tanweer-tools-shop from GitHub"
   - "Open http://localhost:5173 in the browser and describe what you see" (dev server must be running)
 - [ ] Xray MCP decision is deferred to Checkpoint 6 (we validate the write path there; fallback is a script-wrapped GraphQL client — itself a teaching moment).
+- [x] `[H]` Claude Code builder setup (added 2026-07-05): `claude mcp add --transport http --scope project atlassian https://mcp.atlassian.com/v1/mcp/authv2`, same pattern for github (https://api.githubcopilot.com/mcp) and playwright (`npx @playwright/mcp@latest`); commit the generated `.mcp.json`; authenticate via `/mcp`; create root `CLAUDE.md` containing `@.github/copilot-instructions.md`.
 
 **STATUS: COMPLETE (2026-07-05).** Atlassian (browser OAuth, Jira + Confluence scopes) and GitHub MCPs authenticated; all three smoke tests passed (Jira returned project KAN, GitHub returned the README, Playwright opened localhost — note: the page rendering inside VS Code's integrated/Simple Browser is expected behavior, not an error). Endpoint note: use `https://mcp.atlassian.com/v1/mcp/authv2` (recommended for OAuth clients); the plain `/v1/mcp` endpoint also works and additionally supports API-token configurations.
 
@@ -135,7 +152,7 @@
 - [ ] Optionally plant 1–2 extra subtle bugs in the PR itself (e.g., discount line renders but rounding differs by a cent). Keep the trainer's private answer key OUTSIDE the repo, covering both pre-existing `main` defects and anything planted.
 - [ ] **Build minimal Order History** (needed for Story E): persist orders on place-order (context + localStorage is fine), new Order History page listing past orders. Ship it plain — pagination is Story E's future scope, designed from the PRD but intentionally unimplemented, so its test cases can be authored against the spec.
 - [ ] Open a **GitHub PR** for the coupon branch with a realistic dev description (what changed, files touched) and the Story B issue key in branch/commits/PR title — the Regression Guardian reads this in the demo.
-- [ ] `[H]` Merge the order-history work to `main`; leave the coupon PR OPEN — that's the "dev just finished" state.
+- [ ] `[H]` Merge the order-history work to `master` AND push to origin; leave the coupon PR OPEN — that's the "dev just finished" state.
 
 **Done when:** coupon PR open with issue-key convention, order history on `main`, answer key saved privately.
 
@@ -166,14 +183,15 @@
 **Goal:** A living sprint that looks like a real team mid-flight.
 
 ### Structure to create (all `[A]` via Atlassian MCP)
-- [ ] Project **TS (ToolsShop)** — Scrum, with epics per feature area: Catalog, Cart, Auth, Checkout, Orders, Contact. (The auto-created **KAN** project stays untouched as a scratch space, or delete it once TS exists — your call.)
+- [ ] `[H]` FIRST, manually: create project **TS (ToolsShop)** — Scrum, Team-managed (project creation is an admin operation, not exposed by the Atlassian MCP, same as space creation). KAN stays as scratch or gets deleted — your call.
+- [ ] `[A]` Epics per feature area: Catalog, Cart, Auth, Checkout, Orders, Contact.
 - [ ] Assign a few issues to the dummy teammates (this is when their avatars finally appear on the board)
 - [ ] **Story A** — "Product listing with category filter" — Done. Dev subtask Done, QA subtask Done.
 - [ ] **Story B (demo star)** — "Apply discount coupon at checkout" — In Progress. Dev subtask **Done** with link to the GitHub PR from Checkpoint 3 and realistic dev notes. QA subtask **To Do**, assigned to you. Link the Coupon PRD Confluence page.
 - [ ] **Story C** — "Password reset flow" — Dev subtask In Progress → QA blocked. (Tests the briefing agent's reasoning.)
-- [ ] **Story D** — Bug "Cart total wrong after removing item" — status Reopened (failed retest), with fake history comments.
+- [ ] **Story D** — Bug (REAL, from the answer key): "[Cart] Displayed total off by one cent when discount applied" — previously reported, dev claimed fixed, retest failed → status Reopened, with history comments. Genuinely reproducible, so retests are honest ($28.30 − $1.42 displayed, total shows $26.89).
 - [ ] **Story E** — "Order history pagination" — Ready for QA test design; PRD linked; no tests exist yet.
-- [ ] One active sprint containing A–E; 2–3 extra backlog stories for realism; distribute a couple of issues to dummy teammates if created.
+- [ ] One active sprint containing A–E; 2–3 extra backlog stories for realism. Assignment scheme: BA Tanweer (trainingssubscriptions+ba@) = reporter of stories; Dev Tanweer (+dev@) = assignee of dev subtasks; you = assignee of QA subtasks. All three accounts Active. Note: if the MCP cannot create/start sprints, create the sprint manually and let the agent populate it.
 - [ ] `[H]` Sanity-check the board visually.
 
 **Done when:** the board tells the story at a glance and "assigned to me" returns exactly the right items.
@@ -198,16 +216,16 @@
 
 ---
 
-## Checkpoint 7 — Author the Agent Skills (`.github/skills/`)
+## Checkpoint 7 — Author the Agent Skills (`.claude/skills/`)
 
-**Goal:** Encode the team's QA standards as versioned, reusable skills. Each skill = folder + `SKILL.md` (YAML frontmatter: lowercase hyphenated `name` matching the folder, plus a `description` that tells Copilot when to load it). Trainees can invoke them with `/skill-name` in chat or let Copilot auto-discover them.
+**Goal:** Encode the team's QA standards as versioned, reusable skills. Each skill = folder + `SKILL.md` (YAML frontmatter: lowercase hyphenated `name` matching the folder, plus a `description` for auto-discovery). Authored and tested in Claude Code; VS Code Copilot reads `.claude/skills/` too, so trainees invoke the same skills with `/skill-name` during the demo.
 
 ### Skills to create (all `[A]`, reviewed by you)
-- [ ] `.github/skills/test-case-design/` — case format, Xray field mapping, heuristics (equivalence partitioning, BVA, negative paths, state transitions), rule to flag ambiguous requirements
-- [ ] `.github/skills/bug-reporting/` — template, naming convention, severity/priority matrix (mirror the Confluence page), evidence rules (screenshot + console logs), linking rules (story + failing test)
-- [ ] `.github/skills/impact-analysis/` — references `docs/feature-map.md`; procedure: PR diff → changed files → affected features → regression scope proposal
-- [ ] `.github/skills/playwright-automation/` — framework conventions: page objects, selector strategy, spec naming mapped to Xray test IDs, run + report commands
-- [ ] `.github/skills/test-reporting/` — summary comment format, status-transition rules (all pass → Done; open Sev-1/2 → stays In Progress)
+- [ ] `.claude/skills/test-case-design/` — case format, Xray field mapping, heuristics (equivalence partitioning, BVA, negative paths, state transitions), rule to flag ambiguous requirements
+- [ ] `.claude/skills/bug-reporting/` — template, naming convention, severity/priority matrix (mirror the Confluence page), evidence rules (screenshot + console logs), linking rules (story + failing test)
+- [ ] `.claude/skills/impact-analysis/` — references `docs/feature-map.md`; procedure: PR diff → changed files → affected features → regression scope proposal
+- [ ] `.claude/skills/playwright-automation/` — framework conventions: page objects, selector strategy, spec naming mapped to Xray test IDs, run + report commands
+- [ ] `.claude/skills/test-reporting/` — summary comment format, status-transition rules (all pass → Done; open Sev-1/2 → stays In Progress)
 - [ ] `[H]` Review each SKILL.md (keep under ~500 lines; move detail to `references/`); commit.
 
 **Done when:** five skills committed; `/skills` menu lists them; asking "design test cases for X" visibly activates the skill in chat.
@@ -216,9 +234,9 @@
 
 ---
 
-## Checkpoint 8 — Author the Custom Agents (`.github/agents/*.agent.md`)
+## Checkpoint 8 — Author the Custom Agents (`.claude/agents/*.md`)
 
-**Goal:** The specialist workforce. Each agent = `.agent.md` with YAML frontmatter (`name`, `description`, `tools` for least-privilege scoping, optional `model`, optional `handoffs`). Trainees select them from the agent picker; a coordinator can run them as **subagents**; **handoffs** chain them into the demo workflow with a one-click "next step" button after each act.
+**Goal:** The specialist workforce. Authored as Claude Code subagents in `.claude/agents/*.md` (frontmatter: `name`, `description`, `tools` for least-privilege scoping) and built/tested entirely in Claude Code. VS Code Copilot also reads `.claude/agents/`. Final VS Code pass (part of this checkpoint, uses Copilot budget): verify each agent appears in the Copilot agent picker, adjust tool names where Copilot's differ, and add Copilot-only `handoffs` chaining (briefing → guardian → designer → executor → reporter) for the demo's one-click flow.
 
 ### Agents to create (all `[A]`, reviewed by you)
 - [ ] `qa-daily-briefing.agent.md` — my QA tasks + dev-task status → prioritized actionable list. Tools: Atlassian read only. Handoff → regression-guardian.
