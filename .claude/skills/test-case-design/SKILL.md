@@ -14,13 +14,52 @@ Every test case has four parts:
    feature-map.md Section 1 area (Product Listing, Cart, Checkout, Auth, Contact, Orders).
    Match the tone/granularity of the existing repository: TS-23..TS-40 (see
    `scripts/xray/seed-data/*.json`) are the canonical examples.
-2. **Precondition** — one sentence of plain text, not a step. States the state the app/data
-   must already be in (e.g. "Cart contains Claw Hammer ($12.00) at qty 1, on /cart.").
+2. **Precondition** — plain text, not a step: the complete starting state the app/data must
+   already be in (e.g. "Cart contains Claw Hammer ($12.00) at qty 1, on /cart."). It must fully
+   arrange the scene — see "Precondition must fully arrange the scene" below.
 3. **Steps** — numbered; each step is an `{ action, data, expectedResult }` triple. See
    "Step-writing convention" below for how the three fields divide up.
 4. **Expected values are concrete** — real prices, exact totals, exact copy. Never write
    "the correct total" — write "$10.80". Never write "an error appears" if the real message
    is knowable — quote it.
+
+## Precondition must fully arrange the scene
+
+A test case follows Arrange / Act / Assert (Given / When / Then). The **precondition is the
+ARRANGE step**: it must describe a complete, reconstructable starting state — what's in the
+cart (items, quantities), what page the user is on, whether a coupon is applied and to what
+effect, whether the user is logged in. A tester with no memory of any prior test must be able
+to read ONLY the precondition and set up that exact state by hand. The **steps are ACT + ASSERT
+only** — the specific behavior under test and its outcome — and never re-establish setup that
+belongs in the precondition.
+
+- **State, with observable markers — not a click-path.** Describe the resulting state and how
+  you'd know it's correct, e.g. "cart: 1× Claw Hammer ($12.00); coupon TEST10 applied, discount
+  showing -$1.20, total $10.80; on /cart." Do NOT re-teach the mechanics (add to cart → type
+  code → Apply) — that just duplicates another test's Act steps. State the effect as a concrete
+  observable value ("discount -$1.20"), not the vague "a coupon is applied."
+
+- **The Arrange/Act boundary — the same operation changes sides.** The first action that
+  exercises the behavior the test is *named for* is step 1; everything needed to reach that
+  point is precondition. "Apply TEST10" is an ACT in "valid coupon shows discount" (that is the
+  behavior under test) but ARRANGE in "invalid coupon clears the prior discount" (it is the
+  prior state you set up before entering the bad code). Decide each operation's side by the
+  test's own purpose, not by habit.
+
+- **"Act + Assert only" is not "one step."** A test may have several Act+Assert cycles (apply
+  coupon → assert discount → proceed to checkout → assert it carried through). The rule bans
+  *setup* steps, not multiple behavioral steps.
+
+- **Write step 1 to stand on the precondition, not to imply a cold start.** If the precondition
+  says TEST10 is already applied, step 1 is "Enter BADCODE in the coupon field and click Apply"
+  — not "Replace the coupon…", which reads as though the reader just watched it get applied. The
+  step text must make sense to someone who has only the precondition, not the prior test.
+
+- **This is the bridge to automation.** A precondition this concrete maps directly to a setup
+  fixture later — a UI arrange helper or a seeded cart/coupon state — while the steps drive only
+  the behavior under test. State-seeding to establish the Arrange is legitimate; the Act must
+  still drive the real UI. When a starting state recurs across many tests it becomes a candidate
+  for a shared Xray Precondition object / fixture — but completeness comes first, reuse second.
 
 ## Step-writing convention: plain language, selectors in Data
 
@@ -39,6 +78,21 @@ Example:
 **Legacy note:** TS-23..TS-40 predate this convention — their step text has selectors inline.
 Do not migrate them; apply this convention to new tests going forward.
 
+## The `expectedResult` field: outcome only
+
+The seed JSON is the step-by-step definition of a Jira/Xray test case — the same mapping a
+human tester (or, later, an automated-test generator) reads to check a step passed or failed.
+So a step's `expectedResult` field contains ONLY a clean, checkable statement of the outcome —
+the exact observable state, nothing else. Never embed process narration in it: no "verified
+live on <date>", no "Question for BA:", no meta-commentary about how the value was derived. If
+you want to record how an expected value was sourced (PRD quote vs. live verification), say so
+in your response to the human, not in the field itself.
+
+- **Wrong** (narration baked into the field):
+  `"expectedResult": "Discount shows -$1.20 (verified live 2026-07-09). Question for BA: should this recalc when qty changes?"`
+- **Right** (outcome only; sourcing + questions go in your response to the human):
+  `"expectedResult": "[data-test=cart-discount] shows -$1.20; [data-test=cart-total] shows $10.80."`
+
 ## Where expected values come from
 
 Never invent a number or string. Every concrete value in a step must be traceable to one of:
@@ -47,8 +101,11 @@ Never invent a number or string. Every concrete value in a step must be traceabl
   (`TEST10`: 10%, `OFF20`: 20%), `DEMO_CREDENTIALS`.
 - **Live behavior you (or a prior audit) observed** — e.g. `docs/feature-map.md` Section 5
   ("Observed behavior"), or by actually driving the app via Playwright MCP. If you compute a
-  derived value (a discounted total, a filtered count), show the arithmetic came from real
-  inputs: "10% of $12.00 = $1.20 discount → total $10.80", not just the answer.
+  derived value (a discounted total, a filtered count), show the arithmetic **in your response
+  to the human** so the value is auditable — "10% of $12.00 = $1.20 discount → total $10.80" —
+  while the step's `expectedResult` field carries only the resulting concrete outcome (e.g.
+  "discount -$1.20; total $10.80"), never the derivation. See "The `expectedResult` field:
+  outcome only" above.
 
 If you can't trace a value to constants.ts or observed behavior, don't write the test yet —
 go verify it live first.
@@ -109,22 +166,35 @@ Apply these deliberately when deriving cases from a requirement, not just the ha
   filter + search text) to confirm intersection, not accidental union — see TS-30 in
   `product-listing.json` for the pattern.
 
-## Ambiguous or silent requirements: never assume
+## Ambiguous or silent requirements: never assume, never bake the question into the JSON
 
-If a PRD, story, or acceptance criterion doesn't say what should happen in some case, **write
-it as a question for the BA** — do not invent the expected result and do not silently skip the
-case. Example: the "PRD: Checkout Coupon Codes" page (Confluence) says nothing about coupon
-code case-sensitivity, and nothing about recalculating the discount after the cart changes
+If a PRD, story, or acceptance criterion doesn't say what should happen in some case, raise it
+as a **question for the BA in your response to the human** — do not invent the expected result
+and do not silently skip the case. The question is surfaced on screen to the human; it never
+goes into a step's `expectedResult` field (that field is outcome-only — see "The
+`expectedResult` field: outcome only" above). Collect these into a **Questions for BA** list in
+your response.
+
+Because you cannot write a clean, checkable outcome for a behavior the PRD hasn't specified, a
+case that hinges on an unresolved question does **not** go into the seed JSON as a pass/fail
+step yet — surface the question, and only add the case (with a concrete `expectedResult`) once
+the BA has answered or the human directs the intended behavior.
+
+Example: the "PRD: Checkout Coupon Codes" page (Confluence) says nothing about coupon code
+case-sensitivity, and nothing about recalculating the discount after the cart changes
 post-application. Both are real, observable behaviors in the app today (see feature-map.md
-Section 5), but since the PRD is silent, don't encode "the current behavior is correct" as an
-expected result in a *new* test derived from that PRD — flag it instead:
+Section 5), but since the PRD is silent, surface them to the human rather than encoding "the
+current behavior is correct" as an expected result in a *new* test derived from that PRD:
 
 > **Question for BA:** PRD does not specify whether coupon codes are case-sensitive
 > (observed: `test10` is rejected, only exact-case `TEST10` works). Is this intended?
 
+(That block belongs in your response to the human, not in the JSON.)
+
 Regression tests for *already-shipped, already-specified* behavior (like the TS-23..40 seed
-set) are different — there the observed behavior is itself the spec, so it's fine to encode it.
-The rule applies to *new* requirements with a silent PRD, not to characterizing existing behavior.
+set) are different — there the observed behavior is itself the spec, so it's fine to encode it
+as the expected outcome. The rule applies to *new* requirements with a silent PRD, not to
+characterizing existing behavior.
 
 ## Where tests live
 
